@@ -1,9 +1,9 @@
 /*
-    _   ___ ___  _   _ ___ _  _  ___  _    ___   ___ 
+	_   ___ ___  _   _ ___ _  _  ___  _    ___   ___
    /_\ | _ \   \| | | |_ _| \| |/ _ \| |  / _ \ / __|
   / _ \|   / |) | |_| || || .` | (_) | |_| (_) | (_ |
  /_/ \_\_|_\___/ \___/|___|_|\_|\___/|____\___/ \___|
-                                                     
+
   Log library for Arduino
   version 1.0.3
   https://github.com/thijse/Arduino-Log
@@ -86,12 +86,12 @@ void Logging::setSuffix(printfunction f)
 #endif
 }
 
-void Logging::print(const __FlashStringHelper *format, va_list args)
+void Logging::print(const __FlashStringHelper* format, va_list args)
 {
 #ifndef DISABLE_LOGGING	  	
 	PGM_P p = reinterpret_cast<PGM_P>(format);
 	char c = pgm_read_byte(p++);
-	for(;c != 0; c = pgm_read_byte(p++))
+	for (; c != 0; c = pgm_read_byte(p++))
 	{
 		if (c == '%')
 		{
@@ -100,13 +100,16 @@ void Logging::print(const __FlashStringHelper *format, va_list args)
 		}
 		else
 		{
-			_logOutput->print(c);
+			if (_logOutput->availableForWrite() > 0)
+			{
+				_logOutput->print(c);
+			}
 		}
 	}
 #endif
 }
 
-void Logging::print(const char *format, va_list args) {
+void Logging::print(const char* format, va_list args) {
 #ifndef DISABLE_LOGGING	  	
 	for (; *format != 0; ++format)
 	{
@@ -117,85 +120,103 @@ void Logging::print(const char *format, va_list args) {
 		}
 		else
 		{
-			_logOutput->print(*format);
+			if (_logOutput->availableForWrite() > 0)
+			{
+				_logOutput->print(*format);
+			}
 		}
 	}
 #endif
 }
 
-void Logging::printFormat(const char format, va_list *args) {
+void Logging::printFormat(const char format, va_list* args) {
 #ifndef DISABLE_LOGGING
-	if (format == '%')
+
+#ifdef QF_CRIT_ENTRY
+	QF_CRIT_ENTRY();
+#endif
+	if (_logOutput->availableForWrite() > 0)
 	{
-		_logOutput->print(format);
-	}
-	else if (format == 's')
-	{
-		register char *s = (char *)va_arg(*args, int);
-		_logOutput->print(s);
-	}
-	else if (format == 'S')
-	{
-		register __FlashStringHelper *s = (__FlashStringHelper *)va_arg(*args, int);
-		_logOutput->print(s);
-	}
-	else if (format == 'd' || format == 'i')
-	{
-		_logOutput->print(va_arg(*args, int), DEC);
-	}
-	else if (format == 'D' || format == 'F')
-	{
-		_logOutput->print(va_arg(*args, double));
-	}
-	else if (format == 'x')
-	{
-		_logOutput->print(va_arg(*args, int), HEX);
-	}
-	else if (format == 'X')
-	{
-		_logOutput->print("0x");
-		_logOutput->print(va_arg(*args, int), HEX);
-	}
-	else if (format == 'b')
-	{
-		_logOutput->print(va_arg(*args, int), BIN);
-	}
-	else if (format == 'B')
-	{
-		_logOutput->print("0b");
-		_logOutput->print(va_arg(*args, int), BIN);
-	}
-	else if (format == 'l')
-	{
-		_logOutput->print(va_arg(*args, long), DEC);
-	}
-	else if (format == 'c')
-	{
-		_logOutput->print((char) va_arg(*args, int));
-	}
-	else if(format == 't')
-	{
-		if (va_arg(*args, int) == 1)
+
+
+		if (format == '%')
 		{
-			_logOutput->print("T");
+			_logOutput->print(format);
 		}
-		else
+		else if (format == 's')
 		{
-			_logOutput->print("F");
+			register char* s = (char*)va_arg(*args, int);
+			_logOutput->print(s);
 		}
+		else if (format == 'S')
+		{
+			register __FlashStringHelper* s = (__FlashStringHelper*)va_arg(*args, int);
+			_logOutput->print(s);
+		}
+		else if (format == 'd' || format == 'i')
+		{
+			_logOutput->print(va_arg(*args, int), DEC);
+		}
+		else if (format == 'D' || format == 'F')
+		{
+			_logOutput->print(va_arg(*args, double));
+		}
+		else if (format == 'x')
+		{
+			_logOutput->print(va_arg(*args, int), HEX);
+		}
+		else if (format == 'X')
+		{
+			_logOutput->print("0x");
+			_logOutput->print(va_arg(*args, int), HEX);
+		}
+		else if (format == 'b')
+		{
+			_logOutput->print(va_arg(*args, int), BIN);
+		}
+		else if (format == 'B')
+		{
+			_logOutput->print("0b");
+			_logOutput->print(va_arg(*args, int), BIN);
+		}
+		else if (format == 'l')
+		{
+			_logOutput->print(va_arg(*args, long), DEC);
+		}
+		else if (format == 'c')
+		{
+			_logOutput->print((char)va_arg(*args, int));
+		}
+		else if (format == 't')
+		{
+			if (va_arg(*args, int) == 1)
+			{
+				_logOutput->print("T");
+			}
+			else
+			{
+				_logOutput->print("F");
+			}
+		}
+		else if (format == 'T')
+		{
+			if (va_arg(*args, int) == 1)
+			{
+				_logOutput->print(F("true"));
+			}
+			else
+			{
+				_logOutput->print(F("false"));
+			}
+		}
+
 	}
-	else if (format == 'T')
-	{
-		if (va_arg(*args, int) == 1)
-		{
-			_logOutput->print(F("true"));
-		}
-		else
-		{
-			_logOutput->print(F("false"));
-		}
-	}
+
+#ifdef QF_CRIT_EXIT
+	QF_CRIT_EXIT();
+#endif
+
 #endif
 }
- 
+
 Logging Log = Logging();
