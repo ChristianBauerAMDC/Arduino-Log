@@ -109,6 +109,11 @@ void Logging::print(const __FlashStringHelper* format, va_list args)
 #endif
 }
 
+//void Logging::print(Printable& obj, va_list& args)
+//{
+//	_logOutput->print(obj);
+//}
+
 void Logging::print(const char* format, va_list args) {
 #ifndef DISABLE_LOGGING	  	
 	for (; *format != 0; ++format)
@@ -129,10 +134,7 @@ void Logging::print(const char* format, va_list args) {
 #endif
 }
 
-void Logging::print(Printable& obj)
-{
-	_logOutput->print(obj);
-}
+
 
 void Logging::printFormat(const char format, va_list* args) {
 #ifndef DISABLE_LOGGING

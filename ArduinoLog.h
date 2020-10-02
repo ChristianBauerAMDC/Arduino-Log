@@ -259,7 +259,10 @@ private:
 
 	void print(const __FlashStringHelper *format, va_list args);
 
-	void print(Printable& obj);
+	void print(const Printable& obj, va_list& args)
+	{
+		_logOutput->print(obj);
+	}
 
 	void printFormat(const char format, va_list *args);
 
